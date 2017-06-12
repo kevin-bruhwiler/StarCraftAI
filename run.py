@@ -3,7 +3,9 @@ import StarCraftAI as SCAI
 from time import sleep
 
 client = cybw.BWAPIClient
-Broodwar = cybw.Broodwar
+broodwar = cybw.Broodwar
+agent = SCAI.StarCraftAI()
+
 
 def reconnect():
     while not client.connect():
@@ -12,29 +14,18 @@ def reconnect():
 print("Connecting...")
 reconnect()
 while True:
-    print("waiting to enter match")
-    while not Broodwar.isInGame():
+    while not broodwar.isInGame():
         client.update()
         if not client.isConnected():
             print("Reconnecting...")
             reconnect()
 
-    # need newline to flush buffer
-    Broodwar << "The map is " << Broodwar.mapName() << ", a " \
-        << len(Broodwar.getStartLocations()) << "player map" << "\n"
-
-    # Enable some cheat flags
-    Broodwar.enableFlag(cybw.Flag.UserInput)
-
-    show_bullets = False
-    show_visibility_data = False
-
-    if Broodwar.isReplay():
-        Broodwar << "The following players are in this replay:\n"
-        players = Broodwar.getPlayers()
+    if broodwar.isReplay():
+        broodwar << "The following players are in this replay:\n"
+        players = broodwar.getPlayers()
 
     else:
-        SCAI.run()
+        agent.run()
 
-        Broodwar.drawTextScreen(cybw.Position(300, 0), "FPS: " + str(Broodwar.getAverageFPS()))
+        broodwar.drawTextScreen(cybw.Position(300, 0), "FPS: " + str(broodwar.getAverageFPS()))
         client.update()
