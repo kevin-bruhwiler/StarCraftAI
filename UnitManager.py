@@ -11,15 +11,26 @@ class UnitManager:
     def add_units(self):
         units = cybw.Broodwar.self().getUnits()
         for unit in units:
-            if unit.getType().isWorker():
-                self.worker_manager.add_worker(unit)
+            self.add_unit(unit)
 
     def add_unit(self, unit):
         if unit.getType().isWorker():
-            self.worker_manager.add_worker(unit)
+            if len(self.scout_manager.scouts) < self.scout_manager.desired_number_of_scouts:
+                self.scout_manager.add_scout(unit)
+            else:
+                self.worker_manager.add_worker(unit)
+
+    def initialize(self):
+        self.add_units()
+        self.scout_manager.initialize()
 
     def manage(self):
-        if len(self.worker_manager.workers) == 0:
-            print("got here")
-            self.add_units()
+        if not self.scout_manager.scouting_complete:
+            self.scout_manager.scout()
+
+        elif len(self.scout_manager.scouts) > 0:
+            for scout in self.scout_manager.scouts:
+                self.worker_manager.workers.append(scout)
+                self.scout_manager.scouts.remove(scout)
+
         self.worker_manager.work()

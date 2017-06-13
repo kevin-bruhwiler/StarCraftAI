@@ -10,3 +10,7 @@ class StarCraftAI:
 
     def run(self):
         self.unit_manager.manage()
+
+    def initialize(self):
+        self.unit_manager.initialize()
+        self.game_state.initialize()

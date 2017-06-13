@@ -20,6 +20,8 @@ while True:
             print("Reconnecting...")
             reconnect()
 
+    agent.initialize()
+
     if broodwar.isReplay():
         broodwar << "The following players are in this replay:\n"
         players = broodwar.getPlayers()
