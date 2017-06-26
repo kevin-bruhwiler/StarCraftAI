@@ -60,12 +60,11 @@ class GameState:
        :type unit: cybw.Unit
        """
         if unit.getType().isBuilding():
-            if unit.getID().isBuilding():
-                if unit.getID() in self.building_features:
-                    del self.building_features[unit.getID()]
-                    print(str(self.player) + ": Removed building " + str(unit.getID()))
-        else:
             if unit.getID() in self.building_features:
+                del self.building_features[unit.getID()]
+                print(str(self.player) + ": Removed building " + str(unit.getID()))
+        else:
+            if unit.getID() in self.unit_features:
                 del self.unit_features[unit.getID()]
                 print(str(self.player) + ": Removed unit " + str(unit.getID()))
 
