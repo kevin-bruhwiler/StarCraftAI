@@ -13,6 +13,7 @@ def reconnect():
 
 print("Connecting...")
 reconnect()
+
 while True:
     while not broodwar.isInGame():
         client.update()
@@ -22,12 +23,22 @@ while True:
 
     agent.initialize()
 
-    if broodwar.isReplay():
-        broodwar << "The following players are in this replay:\n"
-        players = broodwar.getPlayers()
+    while broodwar.isInGame():
+        for event in broodwar.getEvents():
+            if event.getType() == cybw.EventType.UnitDestroy:
+                for player_state in agent.game_state:
+                    player_state.remove_unit(event.getUnit())
+            elif event.getType() == cybw.EventType.UnitMorph:
+                for player_state in agent.game_state:
+                    player_state.update_unit(event.getUnit())
+            elif event.getType() == cybw.EventType.UnitShow:
+                for player_state in agent.game_state:
+                    player_state.update_unit(event.getUnit())
+            elif event.getType() == cybw.EventType.UnitHide:
+                print("unit hidden")
 
-    else:
         agent.run()
 
         broodwar.drawTextScreen(cybw.Position(300, 0), "FPS: " + str(broodwar.getAverageFPS()))
         client.update()
+
