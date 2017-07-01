@@ -1,15 +1,19 @@
 import cybw
 
 client = cybw.BWAPIClient
-Broodwar = cybw.Broodwar
+broodwar = cybw.Broodwar
+HISTORY_THRESHOLD = 100
+
+
+def distance(game_state1, game_state2):
+    return 5
 
 
 class GameState:
     def __init__(self, player):
-        self.unit_features = {}
-        self.building_features = {}
+        self.features = {'unit_features': {}, 'building_features': {}}
 
-        self.history = None
+        self.history = []
         self.player = player
 
     def update_unit(self, unit):
@@ -23,57 +27,57 @@ class GameState:
             return
 
         if not unit.isVisible(self.player):
+            # TODO: if unit is a building, update getReaminingBuildTime if the building wasn't completed when it was
+            # last seen
+            print('got here')
             return
 
         if unit.getType().isBuilding():
-            self.building_features[unit.getID()] = {'team': unit.getPlayer(),
-                                                    'type': unit.getType(),
-                                                    'hp': unit.getHitPoints(),
-                                                    'pos_x': unit.getPosition().x,
-                                                    'pos_y': unit.getPosition().y,
-                                                    'build_time_remaining': unit.getRemainingBuildTime(),
-                                                    'is_built': unit.isCompleted()}
+            self.features['building_features'][unit.getID()] = {'team': unit.getPlayer(),
+                                                                'type': unit.getType(),
+                                                                'hp': unit.getHitPoints(),
+                                                                'pos_x': unit.getPosition().x,
+                                                                'pos_y': unit.getPosition().y,
+                                                                'build_time_remaining': unit.getRemainingBuildTime(),
+                                                                'is_built': unit.isCompleted()}
             if unit.getType().getRace().getID() != cybw.Races.Zerg.getID():
-                self.building_features[unit.getID()]['shields'] = unit.getShields()
+                self.features['building_features'][unit.getID()]['shields'] = unit.getShields()
 
-            if unit.getID() in self.building_features:
-                print(str(self.player) + ": Updated Building " + str(unit.getID()))
-            else:
-                print(str(self.player) + ": Added building" + str(unit.getID()))
+
         else:
-            self.unit_features[unit.getID()] = {'team': unit.getPlayer(),
-                                                'type': unit.getType(),
-                                                'hp': unit.getHitPoints(),
-                                                'pos_x': unit.getPosition().x,
-                                                'pos_y': unit.getPosition().y}
+            self.features['unit_features'][unit.getID()] = {'team': unit.getPlayer(),
+                                                            'type': unit.getType(),
+                                                            'hp': unit.getHitPoints(),
+                                                            'pos_x': unit.getPosition().x,
+                                                            'pos_y': unit.getPosition().y}
 
             if unit.getType().getRace().getID() != cybw.Races.Zerg.getID():
-                self.unit_features[unit.getID()]['shields'] = unit.getShields()
-
-            if unit.getID() in self.unit_features:
-                print(str(self.player) + ": Updated unit " + str(unit.getID()))
-            else:
-                print(str(self.player) + ": Added new unit " + str(unit.getID()))
+                self.features['unit_features'][unit.getID()]['shields'] = unit.getShields()
 
     def remove_unit(self, unit):
         """
        :type unit: cybw.Unit
        """
         if unit.getType().isBuilding():
-            if unit.getID() in self.building_features:
-                del self.building_features[unit.getID()]
-                print(str(self.player) + ": Removed building " + str(unit.getID()))
+            if unit.getID() in self.features['building_features']:
+                del self.features['building_features'][unit.getID()]
         else:
-            if unit.getID() in self.unit_features:
-                del self.unit_features[unit.getID()]
-                print(str(self.player) + ": Removed unit " + str(unit.getID()))
-
-        print(str(self.player) + ": removed unit " + str(unit.getID()))
+            if unit.getID() in self.features['unit_features']:
+                del self.features['unit_features'][unit.getID()]
 
     def initialize(self):
-        pass
+        self.update()
 
     def update(self):
-        for unit in Broodwar.getAllUnits():
+        for unit in broodwar.getAllUnits():
             if unit.isVisible(self.player):
                 self.update_unit(unit)
+
+        self.features['time'] = broodwar.elapsedTime()
+
+        if len(self.history) == 0:
+            self.history.append(self.features)
+        else:
+            dist = distance(self.history[-1], self.features)
+            if dist >= HISTORY_THRESHOLD:
+                self.history.append(self.features)
