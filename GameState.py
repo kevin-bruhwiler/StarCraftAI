@@ -43,7 +43,6 @@ class GameState:
             if unit.getType().getRace().getID() != cybw.Races.Zerg.getID():
                 self.features['building_features'][unit.getID()]['shields'] = unit.getShields()
 
-
         else:
             self.features['unit_features'][unit.getID()] = {'team': unit.getPlayer(),
                                                             'type': unit.getType(),
@@ -81,3 +80,16 @@ class GameState:
             dist = distance(self.history[-1], self.features)
             if dist >= HISTORY_THRESHOLD:
                 self.history.append(self.features)
+
+    # returns only the amounts of every unit in features that belongs to player
+    def basic_game_state(self, player):
+        basic = {}
+        for key, value in self.features.items():
+            if isinstance(value, dict):
+                for unit_id, features in value.items():
+                    if features['team'] == player:
+                        if features['type'] in basic:
+                            basic[features['type']] += 1
+                        else:
+                            basic[features['type']] = 1
+        return basic

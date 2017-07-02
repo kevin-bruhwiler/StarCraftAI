@@ -13,6 +13,7 @@ class StarCraftAI:
             self.unit_manager.manage()
         for state in self.game_state:
             state.update()
+            print(state.basic_game_state(state.player))
 
     def initialize(self):
         if cybw.Broodwar.isReplay():
