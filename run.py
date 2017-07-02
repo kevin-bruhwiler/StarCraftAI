@@ -32,13 +32,13 @@ while True:
         if frames == 5:
             for event in broodwar.getEvents():
                 if event.getType() == cybw.EventType.UnitDestroy:
-                    for player_state in agent.game_state:
+                    for player_state in agent.game_states:
                         player_state.remove_unit(event.getUnit())
                 elif event.getType() == cybw.EventType.UnitMorph:
-                    for player_state in agent.game_state:
+                    for player_state in agent.game_states:
                         player_state.update_unit(event.getUnit())
                 elif event.getType() == cybw.EventType.UnitShow:
-                    for player_state in agent.game_state:
+                    for player_state in agent.game_states:
                         player_state.update_unit(event.getUnit())
                 elif event.getType() == cybw.EventType.UnitHide:
                     pass
