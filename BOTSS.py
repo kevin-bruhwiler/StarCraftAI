@@ -11,7 +11,7 @@ class Tree:
         self.depth = 0
 
     # returns a list of all possible children that we could move to from node.
-    def make_children(self, node):
+    def make_children(self):
         return []
 
     # adds node to self.children
@@ -27,6 +27,13 @@ class Tree:
             node.depth = self.depth + 1
             if node.depth < MAX_DEPTH:
                 self.add_child(node)
+
+    def construct_tree(self):
+        children = self.make_children()
+        if len(children) > 0:
+            self.add_children(children)
+            for child in self.children:
+                child.construct_tree()
 
 
 # Build Order Tree Search Simulator
