@@ -1,5 +1,5 @@
 import cybw
-import random
+import time
 
 MAX_DEPTH = 100
 
@@ -37,20 +37,26 @@ class Tree:
         assert isinstance(node, Tree)
         if node.depth < MAX_DEPTH:
             self.children.append(node)
+            return True;
+        return False;
+        print("Node Depth: " + (str)(node.depth))
 
     # adds nodes to list.children
     def add_children(self, nodes):
         for node in nodes:
             if node.depth < MAX_DEPTH:
                 self.add_child(node)
+                return True;
+            return False;
 
     def construct_tree(self):
         children = self.make_children()
         if len(children) > 0:
-            self.add_children(children)
-            for child in self.children:
-                if child.depth < MAX_DEPTH:
-                    child.construct_tree()
+            if self.add_children(children) :
+                for child in self.children:
+                    if child.depth < MAX_DEPTH:
+                        child.construct_tree()
+                        print("Child Depth: " + (str)(child.depth))
 
 
 # Build Order Tree Search Simulator
@@ -73,4 +79,8 @@ class BOTSS:
 tree_search = BOTSS()
 tree_search.tree.data = {cybw.UnitTypes.Protoss_Probe: 5, cybw.UnitTypes.Protoss_Nexus: 1}
 tree_search.tree.race = list(tree_search.tree.data.keys())[0].getRace()
+time_start = time.time()
 tree_search.tree.construct_tree()
+time_end = time.time()
+print("Total Execution time: " + (str)(time_end - time_start))
+
