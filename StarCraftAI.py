@@ -40,7 +40,7 @@ class StarCraftAI:
 
             self.unit_manager.initialize()
             self.game_state.initialize()
-            self.build_order_parse()
+            # self.build_order_parse()
 
     def build_order_parse(self):
         working_dir = os.path.dirname(os.path.abspath(__file__))
