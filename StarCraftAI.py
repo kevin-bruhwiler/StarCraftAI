@@ -8,7 +8,6 @@ UPDATE_INTERVAL = 5
 
 
 class StarCraftAI:
-
     def __init__(self):
         self.unit_manager = None
         self.game_state = None
@@ -42,7 +41,9 @@ class StarCraftAI:
             self.game_state.initialize()
             # self.build_order_parse()
 
-    def build_order_parse(self):
+
+    @staticmethod
+    def build_order_parser(self):
         working_dir = os.path.dirname(os.path.abspath(__file__))
         # Add pathing to each race's buildorders depending on their race
         absolute_path = os.path.join(working_dir, "buildOrders", "Terran", "testOrder.txt")
