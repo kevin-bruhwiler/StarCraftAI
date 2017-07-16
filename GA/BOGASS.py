@@ -43,8 +43,7 @@ class BOGASS:
 # test code
 GA_search = BOGASS(start={cybw.UnitTypes.Protoss_Probe: 5, cybw.UnitTypes.Protoss_Nexus: 1},
             goal={cybw.UnitTypes.Protoss_Nexus: 2,
-            cybw.UnitTypes.Protoss_Gateway: 2,
             cybw.UnitTypes.Protoss_Stargate: 1})
 
-GA_search.find_optimal_build_order()
+# GA_search.find_optimal_build_order()
 

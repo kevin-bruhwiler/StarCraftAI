@@ -8,6 +8,29 @@ from GA import genome as genome
 def mutation_rates():
     return {}
 
+def build_requirements_met(start, build_order, required_units):
+    for required_unit, required_amount in required_units.items():
+        amount = 0
+        if required_unit in start.keys():
+            amount += start[required_unit]
+        for unit in build_order:
+            if unit == required_unit:
+                amount += 1
+        if amount < required_amount:
+            return False
+    return True
+
+def add_build_requirements(start, build_order, required_units):
+    while not build_requirements_met(start, build_order, required_units):
+        for unit, amount in required_units.items():
+            if unit.isWorker():
+                continue
+            if build_requirements_met(start, build_order, unit.requiredUnits()):
+                for i in range(amount):
+                    build_order.append(unit)
+            else:
+                add_build_requirements(start, build_order, unit.requiredUnits())
+
 def convert_to_minimum_architecture(start, goal):
     difference = []
     for key, value in goal.items():
@@ -15,8 +38,17 @@ def convert_to_minimum_architecture(start, goal):
             difference.append([key, value])
         else:
             difference.append([key, value])
-    print(difference)
 
+    minimal_build_order = []
+
+    while len(difference) > 0:
+        for unit_amount in difference:
+            if build_requirements_met(start, minimal_build_order, unit_amount[0].requiredUnits()):
+                for i in range(unit_amount[1]):
+                    minimal_build_order.append(unit_amount[0])
+                difference.remove(unit_amount)
+            else:
+                add_build_requirements(start, minimal_build_order, unit_amount[0].requiredUnits())
 
 class Pool(object):
     """
@@ -34,7 +66,7 @@ class Pool(object):
         self.population = size
         self.stale_species = stale_species
 
-        self.init_pool()
+        # self.init_pool()
 
     def total_average_fitness(self):
         """
