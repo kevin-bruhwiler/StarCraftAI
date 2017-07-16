@@ -1,12 +1,9 @@
-import logging
 import math
 import random
 from copy import deepcopy
 
 from GA import genome as genome
 
-def mutation_rates():
-    return {}
 
 def build_requirements_met(start, build_order, required_units):
     for required_unit, required_amount in required_units.items():
@@ -50,23 +47,26 @@ def convert_to_minimum_architecture(start, goal):
             else:
                 add_build_requirements(start, minimal_build_order, unit_amount[0].requiredUnits())
 
+    return minimal_build_order
+
 class Pool(object):
     """
     :type species: list[Species]
     :type best_genome: ml.genome.Genome
     """
     def __init__(self, start=None, goal=None, size=5000, stale_species=15):
-        self.genes = []
         self.minimum_architecture = convert_to_minimum_architecture(start, goal)
+        self.start = start
+        self.genes = self.make_genes()
         self.species = []
         self.generation = 0
         self.max_fitness = -1
-        self.mutation_rates = mutation_rates()
         self.best_genome = None
         self.population = size
         self.stale_species = stale_species
+        self.innovations = 0
 
-        # self.init_pool()
+        self.init_pool()
 
     def total_average_fitness(self):
         """
@@ -122,7 +122,7 @@ class Pool(object):
         """
         found_species = False
         if len(self.species) == 0:
-            child_species = Species(self.mutation_rates)
+            child_species = Species()
             child_species.genomes.append(child)
             self.species.append(child_species)
             return
@@ -131,7 +131,7 @@ class Pool(object):
                 species.genomes.append(child)
                 found_species = True
         if not found_species:
-            child_species = Species(self.mutation_rates)
+            child_species = Species()
             child_species.genomes.append(child)
             self.species.append(child_species)
 
@@ -151,6 +151,14 @@ class Pool(object):
             g.global_rank = i
             i += 1
 
+    def update_best_genome(self):
+        for species in self.species:
+            for g in species.genomes:
+                if self.best_genome is None:
+                    self.best_genome = deepcopy(g)
+                self.max_fitness = self.best_genome.fitness
+
+
     def new_generation(self):
         """
         Steps:
@@ -163,8 +171,8 @@ class Pool(object):
         6. Remove all but the top individual per species
         7. Add the children to their appropriate species, as outline in add_too_species()
         """
-        logging.info('Best accuracy: {}%'.format(self.best_genome.fitness*100.))
-        logging.info('Making a new generation...')
+        # print('Best accuracy: {}%'.format(self.best_genome.fitness*100.))
+        # print('Making a new generation...')
         self.cull_species(False)
         self.remove_stale_species()
         self.rank_globally()
@@ -196,7 +204,7 @@ class Pool(object):
         individuals to species according to their architecture
         """
         for i in range(0, self.population):
-            g = genome.Genome(self.mutation_rates, genes=deepcopy(self.minimum_architecture))
+            g = genome.Genome(build_order=self.minimum_architecture, start=self.start)
             self.mutate(g)
             self.add_to_species(g)
 
@@ -209,16 +217,18 @@ class Pool(object):
         :type g: genome
         """
         g.mutate()
-        # check to see if a new gene emerged
+
         found_gene = False
         for g1 in g.genes:
             for g2 in self.genes:
-                if g1.equals(g2):
+                if g1 == g2:
                     # since they are the same gene, they need to have the same innovation number
                     g1.innovation = g2.innovation
                     found_gene = True
             # if g1 is unique, add it to the gene pool
             if not found_gene:
+                self.innovations += 1
+                g1.innovation = self.innovations
                 self.genes.append(g1)
             found_gene = False
 
@@ -228,10 +238,30 @@ class Pool(object):
         :type species: Species
         """
         g = random.choice(species.genomes)
-        child = g.copy_genome(self.mutation_rates)
+        child = g.copy_genome()
         self.mutate(child)
 
         return child
+
+    def make_genes(self):
+        genes = []
+        for i in range(len(self.minimum_architecture)):
+            if i == 0:
+                gene = genome.Gene(previous_unit=None,
+                            unit=self.minimum_architecture[i],
+                            proceeding_unit=self.minimum_architecture[i+1])
+            elif i == len(self.minimum_architecture) - 1:
+                gene = genome.Gene(previous_unit=self.minimum_architecture[i - 1],
+                            unit=self.minimum_architecture[i],
+                            proceeding_unit=None)
+            else:
+                gene = genome.Gene(previous_unit=self.minimum_architecture[i-1],
+                            unit=self.minimum_architecture[i],
+                            proceeding_unit=self.minimum_architecture[i+1])
+
+            if gene not in genes:
+                genes.append(gene)
+        return genes
 
 
 class Species(object):
@@ -239,12 +269,11 @@ class Species(object):
     :type genomes: list[genome]
     """
 
-    def __init__(self, mutation_rates):
+    def __init__(self):
         self.top_fitness = 0
         self.staleness = 0
         self.genomes = []
         self.average_fitness = 0
-        self.mutation_rates = mutation_rates
 
     def calculate_average_fitness(self):
         """
@@ -259,7 +288,7 @@ class Species(object):
         """
         Choose a random genome, mutate it, and return it
         """
-        child = random.choice(self.genomes).copy_genome(self.mutation_rates)
+        child = random.choice(self.genomes).copy_genome()
         child.mutate()
         return child
 
@@ -279,9 +308,9 @@ def same_species(g1, g2):
     :type g1: genome
     :type g2: genome
     """
-    dd = 2 * disjoint(g1.genes, g2.genes)
-    return dd < 1
-
+    #dd = 2 * disjoint(g1.build_order, g2.build_order)
+    #return dd < 1
+    return .5
 
 def disjoint(g1, g2):
     i1 = []

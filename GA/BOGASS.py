@@ -1,15 +1,18 @@
 import cybw
-
 from GA import genetic as genetic
 
-pool_size = 500
-max_generations = 100
+import time
+
+pool_size = 50
+max_generations = 50
 stale_species = 15
 
 def evaluate(genome):
     """
     Build Order Genetic Algorithm Search Simulation
     """
+    #TODO: THIS
+    genome.fitness = 5 #seconds
 
 #I want to use NEAT as my genetic algorithm..... not just basic GA shit
 # I am using gentic algorithms to find the best build order between the start and goal.
@@ -29,21 +32,24 @@ class BOGASS:
 
     def find_optimal_build_order(self):
         print('Training {} genomes for {} generations.'.format(pool_size, max_generations))
+        start_time = time.time()
         while self.GA.generation < 100:
             self.evaluate_population()
+            self.GA.update_best_genome()
             self.GA.new_generation()
         self.optimal_build_order = self.GA.best_genome
+
+        print('Total elapsed time: ' + str(time.time() - start_time))
 
     def evaluate_population(self):
         for species in self.GA.species:
             for genome in species.genomes:
                 evaluate(genome)
 
-
 # test code
 GA_search = BOGASS(start={cybw.UnitTypes.Protoss_Probe: 5, cybw.UnitTypes.Protoss_Nexus: 1},
             goal={cybw.UnitTypes.Protoss_Nexus: 2,
             cybw.UnitTypes.Protoss_Stargate: 1})
 
-# GA_search.find_optimal_build_order()
+GA_search.find_optimal_build_order()
 
