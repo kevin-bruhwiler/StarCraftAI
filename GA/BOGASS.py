@@ -9,7 +9,7 @@ stale_species = 15
 
 def evaluate(genome):
     """
-    Build Order Genetic Algorithm Search Simulation
+    Compute the amount of time it takes to complete the build order
     """
     #TODO: THIS
     genome.fitness = 5 #seconds
@@ -33,12 +33,12 @@ class BOGASS:
     def find_optimal_build_order(self):
         print('Training {} genomes for {} generations.'.format(pool_size, max_generations))
         start_time = time.time()
-        while self.GA.generation < 2:
+        while self.GA.generation < 15:
             self.evaluate_population()
             self.GA.update_best_genome()
             self.GA.new_generation()
         self.optimal_build_order = self.GA.best_genome
-
+        print('Best build order: ' + str(self.GA.best_genome.build_order))
         print('Total elapsed time: ' + str(time.time() - start_time))
 
     def evaluate_population(self):
@@ -49,7 +49,7 @@ class BOGASS:
 # test code
 GA_search = BOGASS(start={cybw.UnitTypes.Terran_SCV: 5, cybw.UnitTypes.Terran_Command_Center: 1},
             goal={cybw.UnitTypes.Terran_Command_Center: 2,
-            cybw.UnitTypes.Terran_Engineering_Bay: 1})
+            cybw.UnitTypes.Terran_Starport: 1})
 
 GA_search.find_optimal_build_order()
 

@@ -1,14 +1,16 @@
 import cybw
 import random
-from copy import deepcopy
 
 def mutation_rates():
     return {'create_worker': .9,
-            'create_supply': .3,
+            'create_supply': .1,
+            'create_refinery': .1,
             'swap': .05}
 
-def build_requirements_met(start, build_order, required_units):
-    for required_unit, required_amount in required_units.items():
+def build_requirements_met(start, build_order, unit):
+    if unit.gasPrice() > 0 and cybw.UnitTypes.Terran_Refinery not in build_order:
+        build_order.append(cybw.UnitTypes.Terran_Refinery)
+    for required_unit, required_amount in unit.requiredUnits().items():
         amount = 0
         if required_unit in start.keys():
             amount += start[required_unit]
@@ -19,20 +21,6 @@ def build_requirements_met(start, build_order, required_units):
             return False
     return True
 
-'''
-example build order
-9 Pylon
-13 Gateway
-14 Assimilator
-16 Pylon
-17 Cybernetics core
-
-probe, probe, probe, probe, pylon,
-probe, probe, probe, probe, gateway
-probe, Assimilator
-probe, probe, pylon
-probe, Cybernetics core
-  '''
 
 class Gene(object):
     def __init__(self, previous_unit=None, unit=None, proceeding_unit=None):
@@ -73,10 +61,12 @@ class Genome(object):
         if random.random() < self.mutation_rates['create_supply']:
             self.create_supply()
 
+        if random.random() < self.mutation_rates['create_refinery']:
+            self.create_refinery()
+
         if random.random() < self.mutation_rates['swap']:
             self.swap()
 
-        print(self.build_order)
         self.make_genes()
 
     def create_worker(self):
@@ -111,9 +101,16 @@ class Genome(object):
             random_b = random.randint(0, len(self.build_order)-1)
 
         # check to make sure that the unit at [random_b] will have all the build requirments at [random_a].
-
         if  self.requirements_met(random_a, random_b):
             self.build_order[random_a], self.build_order[random_b] = self.build_order[random_b], self.build_order[random_a]
+
+    def create_refinery(self):
+        """
+        Randomly add a refinery into the build order
+        """
+        random_index = random.randint(0, len(self.build_order)-1)
+        if self.room_for_refinery(random_index):
+            self.build_order.insert(random_index, cybw.UnitTypes.Terran_Refinery)
 
     def enough_supply(self, unit, index):
         """
@@ -127,9 +124,7 @@ class Genome(object):
         for i in range(index):
             remaining_supply += self.build_order[i].supplyProvided() - self.build_order[i].supplyRequired()
         remaining_supply += unit.supplyProvided() - unit.supplyRequired()
-        if remaining_supply < 0:
-            return False
-        return True
+        return remaining_supply > 0
 
     def requirements_met(self, index_a, index_b):
         if index_a > index_b:
@@ -137,7 +132,29 @@ class Genome(object):
 
         unit_b = self.build_order[index_b]
 
-        return build_requirements_met(self.start, self.build_order[:index_a], unit_b.requiredUnits())
+        return build_requirements_met(self.start, self.build_order[:index_a], unit_b)
+
+    def room_for_refinery(self, index):
+        """
+        Check to see if there is enough supply for the unit at the index of the build order
+        :param index: the index of the build order to inject the unit
+        """
+        command_centers = 0
+        refineries = 0
+        for unit, amount in self.start.items():
+            if unit == cybw.UnitTypes.Terran_Command_Center:
+                command_centers += 1
+            elif unit == cybw.UnitTypes.Terran_Refinery:
+                refineries += 1
+        for i in range(index):
+            if unit == cybw.UnitTypes.Terran_Command_Center:
+                command_centers += 1
+            elif unit == cybw.UnitTypes.Terran_Refinery:
+                refineries += 1
+
+        #TODO: Special mineral patches dont have refineries. How to account for this?
+
+        return (command_centers*2 - refineries) > 0
 
 
     def copy_genome(self):

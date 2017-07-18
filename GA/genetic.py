@@ -4,17 +4,19 @@ from copy import copy
 
 from GA import genome as genome
 
+#where to put the check for if the unit requires gas?
 
-def add_build_requirements(start, build_order, required_units):
-    while not genome.build_requirements_met(start, build_order, required_units):
-        for unit, amount in required_units.items():
+
+def add_build_requirements(start, build_order, unit):
+    while not genome.build_requirements_met(start, build_order, unit):
+        for unit, amount in unit.requiredUnits().items():
             if unit.isWorker():
                 continue
-            if genome.build_requirements_met(start, build_order, unit.requiredUnits()):
+            if genome.build_requirements_met(start, build_order, unit):
                 for i in range(amount):
                     build_order.append(unit)
             else:
-                add_build_requirements(start, build_order, unit.requiredUnits())
+                add_build_requirements(start, build_order, unit)
 
 def convert_to_minimum_architecture(start, goal):
     difference = []
@@ -28,12 +30,12 @@ def convert_to_minimum_architecture(start, goal):
 
     while len(difference) > 0:
         for unit_amount in difference:
-            if genome.build_requirements_met(start, minimal_build_order, unit_amount[0].requiredUnits()):
+            if genome.build_requirements_met(start, minimal_build_order, unit_amount[0]):
                 for i in range(unit_amount[1]):
                     minimal_build_order.append(unit_amount[0])
                 difference.remove(unit_amount)
             else:
-                add_build_requirements(start, minimal_build_order, unit_amount[0].requiredUnits())
+                add_build_requirements(start, minimal_build_order, unit_amount[0])
 
     return minimal_build_order
 
@@ -144,7 +146,11 @@ class Pool(object):
             for g in species.genomes:
                 if self.best_genome is None:
                     self.best_genome = copy(g)
-                self.max_fitness = self.best_genome.fitness
+                    self.max_fitness = g.fitness
+                if g.fitness >= self.max_fitness:
+                    self.max_fitness = self.best_genome.fitness
+                    self.best_genome = g
+
 
 
     def new_generation(self):
