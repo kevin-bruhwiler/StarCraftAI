@@ -33,7 +33,7 @@ class BOGASS:
     def find_optimal_build_order(self):
         print('Training {} genomes for {} generations.'.format(pool_size, max_generations))
         start_time = time.time()
-        while self.GA.generation < 100:
+        while self.GA.generation < 2:
             self.evaluate_population()
             self.GA.update_best_genome()
             self.GA.new_generation()
@@ -47,9 +47,9 @@ class BOGASS:
                 evaluate(genome)
 
 # test code
-GA_search = BOGASS(start={cybw.UnitTypes.Protoss_Probe: 5, cybw.UnitTypes.Protoss_Nexus: 1},
-            goal={cybw.UnitTypes.Protoss_Nexus: 2,
-            cybw.UnitTypes.Protoss_Stargate: 1})
+GA_search = BOGASS(start={cybw.UnitTypes.Terran_SCV: 5, cybw.UnitTypes.Terran_Command_Center: 1},
+            goal={cybw.UnitTypes.Terran_Command_Center: 2,
+            cybw.UnitTypes.Terran_Engineering_Bay: 1})
 
 GA_search.find_optimal_build_order()
 

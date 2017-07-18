@@ -1,28 +1,16 @@
 import math
 import random
-from copy import deepcopy
+from copy import copy
 
 from GA import genome as genome
 
 
-def build_requirements_met(start, build_order, required_units):
-    for required_unit, required_amount in required_units.items():
-        amount = 0
-        if required_unit in start.keys():
-            amount += start[required_unit]
-        for unit in build_order:
-            if unit == required_unit:
-                amount += 1
-        if amount < required_amount:
-            return False
-    return True
-
 def add_build_requirements(start, build_order, required_units):
-    while not build_requirements_met(start, build_order, required_units):
+    while not genome.build_requirements_met(start, build_order, required_units):
         for unit, amount in required_units.items():
             if unit.isWorker():
                 continue
-            if build_requirements_met(start, build_order, unit.requiredUnits()):
+            if genome.build_requirements_met(start, build_order, unit.requiredUnits()):
                 for i in range(amount):
                     build_order.append(unit)
             else:
@@ -40,7 +28,7 @@ def convert_to_minimum_architecture(start, goal):
 
     while len(difference) > 0:
         for unit_amount in difference:
-            if build_requirements_met(start, minimal_build_order, unit_amount[0].requiredUnits()):
+            if genome.build_requirements_met(start, minimal_build_order, unit_amount[0].requiredUnits()):
                 for i in range(unit_amount[1]):
                     minimal_build_order.append(unit_amount[0])
                 difference.remove(unit_amount)
@@ -155,7 +143,7 @@ class Pool(object):
         for species in self.species:
             for g in species.genomes:
                 if self.best_genome is None:
-                    self.best_genome = deepcopy(g)
+                    self.best_genome = copy(g)
                 self.max_fitness = self.best_genome.fitness
 
 
@@ -204,7 +192,7 @@ class Pool(object):
         individuals to species according to their architecture
         """
         for i in range(0, self.population):
-            g = genome.Genome(build_order=self.minimum_architecture, start=self.start)
+            g = genome.Genome(build_order=copy(self.minimum_architecture), start=self.start)
             self.mutate(g)
             self.add_to_species(g)
 
@@ -245,7 +233,7 @@ class Pool(object):
 
     def make_genes(self):
         genes = []
-        for i in range(len(self.minimum_architecture)):
+        for i in range(len(self.minimum_architecture)-1):
             if i == 0:
                 gene = genome.Gene(previous_unit=None,
                             unit=self.minimum_architecture[i],
