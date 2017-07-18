@@ -101,6 +101,7 @@ class GameState:
 
         self.history = []
         self.player = player
+        self.history_added = False
 
     def update_unit(self, unit):
         """
@@ -181,6 +182,9 @@ class GameState:
             dist = distance(self.history[-1], self.features)
             if dist >= HISTORY_THRESHOLD:
                 self.history.append(self.features)
+                self.history_added = True
+            else:
+                self.history_added = False
 
     def basic_game_state(self, player):
         """

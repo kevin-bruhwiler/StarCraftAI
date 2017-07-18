@@ -23,4 +23,5 @@ class WorkerManager:
                     if closest_mineral:
                         worker.gather(closest_mineral)
 
-
+    def getBuilder(self, building):
+        pass

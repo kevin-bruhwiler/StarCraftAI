@@ -14,9 +14,6 @@ def evaluate(genome):
     #TODO: THIS
     genome.fitness = 5 #seconds
 
-#I want to use NEAT as my genetic algorithm..... not just basic GA shit
-# I am using gentic algorithms to find the best build order between the start and goal.
-# start is the current game state, goal is the desired game state determined by a NN.
 class BOGASS:
     """
     Build Order Genetic Algorithm Search Simulation
@@ -45,11 +42,3 @@ class BOGASS:
         for species in self.GA.species:
             for genome in species.genomes:
                 evaluate(genome)
-
-# test code
-GA_search = BOGASS(start={cybw.UnitTypes.Terran_SCV: 5, cybw.UnitTypes.Terran_Command_Center: 1},
-            goal={cybw.UnitTypes.Terran_Command_Center: 2,
-            cybw.UnitTypes.Terran_Starport: 1})
-
-GA_search.find_optimal_build_order()
-

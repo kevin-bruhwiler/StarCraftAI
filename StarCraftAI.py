@@ -1,7 +1,10 @@
-
 import cybw
 import UnitManager
 import GameState
+import Macro
+import BuildingManager
+from GA import BOGASS
+
 import os
 
 UPDATE_INTERVAL = 5
@@ -12,10 +15,13 @@ class StarCraftAI:
         self.unit_manager = None
         self.game_state = None
         self.replay_game_states = []
+        self.macro_agent = Macro.Macro()
+        self.building_Manager = None
 
     def run(self):
         if not cybw.Broodwar.isReplay():
             self.unit_manager.manage()
+            self.building_Manager.assign_workers_to_unassigned_buildings()
 
         if cybw.Broodwar.isReplay():
             for state in self.replay_game_states:
@@ -24,7 +30,12 @@ class StarCraftAI:
 
         else:
             self.game_state.update()
-            print(self.game_state.basic_game_state(self.game_state.player))
+            if self.game_state.history_added:
+                self.macro_agent.prepare_input(self.game_state.history)
+                self.macro_agent.run()
+                # build_order_finder = BOGASS.BOGASS(start=self.game_state.basic_game_state(), goal=self.macro_agent.get_output())
+                # build_order_finder.find_optimal_build_order()
+
 
     def initialize(self):
         cybw.Broodwar.setCommandOptimizationLevel(2)
@@ -36,10 +47,11 @@ class StarCraftAI:
         else:
             self.game_state = GameState.GameState(cybw.Broodwar.self())
             self.unit_manager = UnitManager.UnitManager()
+            self.building_Manager = BuildingManager.BuildingManager()
 
             self.unit_manager.initialize()
             self.game_state.initialize()
-            # self.build_order_parse()
+            # self.build_order_parser()
 
 
     @staticmethod
