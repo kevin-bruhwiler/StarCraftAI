@@ -10,11 +10,21 @@ class Macro(object):
         pass
 
     def prepare_input(self, game_states):
+        """
+        Converts game_states to be a TF input
+        :type game_states: list(GameState.GameState)
+        """
         pass
 
     def run(self):
+        """
+        Runs the TF model one time
+        """
         pass
 
     def get_output(self):
+        """
+        Collects the output of the TF model, and converts it to a basic_game_state
+        """
         return {cybw.UnitTypes.Terran_Command_Center: 2,
             cybw.UnitTypes.Terran_Starport: 1}

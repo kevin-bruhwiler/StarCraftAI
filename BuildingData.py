@@ -23,14 +23,26 @@ class BuildingData(object):
         self.buildings = []
 
     def is_being_built(self, type):
+        """
+        Is this type of unit in the queue for being built?
+        :type unit: cybw.Unit
+        """
         for building in self.buildings:
             if building.type() == type:
                 return True
         return False
 
     def remove_buildings(self, buildings):
+        """
+        Remove buildings from self.buildings
+        :type buildings: list(cybw.Unit)
+        """
         for building in buildings:
             self.remove_building(building)
 
     def remove_building(self, building):
+        """
+        Remove building from self.buildings
+        :type building: cybw.Unit
+        """
         self.buildings.remove(building)

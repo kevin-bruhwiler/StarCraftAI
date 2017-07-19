@@ -19,6 +19,9 @@ class StarCraftAI:
         self.building_Manager = None
 
     def run(self):
+        """
+        Gets called every frame, calls every sub-controller to run
+        """
         if not cybw.Broodwar.isReplay():
             self.unit_manager.manage()
             self.building_Manager.assign_workers_to_unassigned_buildings()
@@ -36,8 +39,10 @@ class StarCraftAI:
                 # build_order_finder = BOGASS.BOGASS(start=self.game_state.basic_game_state(), goal=self.macro_agent.get_output())
                 # build_order_finder.find_optimal_build_order()
 
-
     def initialize(self):
+        """
+        Intialize every sub-controller
+        """
         cybw.Broodwar.setCommandOptimizationLevel(2)
         if cybw.Broodwar.isReplay():
             for player in cybw.Broodwar.getPlayers():
@@ -53,9 +58,11 @@ class StarCraftAI:
             self.game_state.initialize()
             # self.build_order_parser()
 
-
     @staticmethod
-    def build_order_parser(self):
+    def build_order_parser():
+        """
+        Load in a predefined build order from file
+        """
         working_dir = os.path.dirname(os.path.abspath(__file__))
         # Add pathing to each race's buildorders depending on their race
         absolute_path = os.path.join(working_dir, "buildOrders", "Terran", "testOrder.txt")

@@ -11,11 +11,18 @@ class ScoutManager:
         self.desired_number_of_scouts = 1
 
     def initialize(self):
+        """
+        Get all start locations, and remove our start location
+        """
         start_locations = cybw.Broodwar.getStartLocations()
         start_locations.remove(cybw.Broodwar.self().getStartLocation())
         self.make_path(start_locations)
 
     def make_path(self, start_locations):
+        """
+        Compute the optimal scouting path
+        :type start_locations: list(cybw.GameClient.TilePosition)
+        """
         scout = self.scouts[0]
         while len(start_locations) > 0:
             smallest_distance = 99999
@@ -32,10 +39,17 @@ class ScoutManager:
         print(len(self.scouting_path))
 
     def add_scout(self, scout):
+        """
+        Adds a scout to self.scouts
+        :type scout: cybw.Unit
+        """
         if scout.getType().isWorker() and scout not in self.scouts:
             self.scouts.append(scout)
 
     def scout(self):
+        """
+        Get all start locations, and remove our start location
+        """
         # since we only have one scout (for now, make it cleaner to access)
         scout = self.scouts[0]
 
@@ -48,7 +62,6 @@ class ScoutManager:
             scout.move(cybw.Position(self.scouting_path[0]))
         # return home
         else:
-            print("got here")
             if scout.getPosition().getDistance(cybw.Position(cybw.Broodwar.self().getStartLocation())) > 3:
                 scout.move(cybw.Position(cybw.Broodwar.self().getStartLocation()))
             else:
