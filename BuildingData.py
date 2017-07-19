@@ -17,6 +17,8 @@ class Building(object):
         self.build_command_given = False
         self.under_construction = False
         self.is_gas_steal = False
+        self.building_unit = None
+        self.builder_unit = None
 
 class BuildingData(object):
     def __init__(self):
@@ -25,7 +27,7 @@ class BuildingData(object):
     def is_being_built(self, type):
         """
         Is this type of unit in the queue for being built?
-        :type unit: cybw.Unit
+        :type type: cybw.Unit
         """
         for building in self.buildings:
             if building.type() == type:

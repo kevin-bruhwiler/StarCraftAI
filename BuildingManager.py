@@ -11,7 +11,17 @@ class BuildingManager(object):
         self.reservedGas = 0
         self.reservedMinerals = 0
         self.buildings = []
+        self.worker_mananger = None
+        self.building_placer = None
+        self.map_tools = None
 
+        for obj in gc.get_objects():
+            if isinstance(obj, WorkerManager.WorkerManager):
+                self.worker_manager = obj
+            if isinstance(obj, BuildingPlacer.BuildingPlacer):
+                self.building_placer = obj
+            if isinstance(obj, MapTools.MapTools):
+                self.map_tools = obj
     def update(self):
         """
         Update all aspects of the BuildingManager
@@ -23,7 +33,8 @@ class BuildingManager(object):
         self.check_for_dead_builder()
         self.check_for_completed_buildings()
 
-    def is_building_position_explored(self, building):
+    @staticmethod
+    def is_building_position_explored(building):
         """
         Check to seeif where we want to build the building has been explored
         """
@@ -62,19 +73,11 @@ class BuildingManager(object):
         """
         Assign workers to the unassigned buildings and label them 'planned'
         """
-        worker_manager = None
-        building_placer = None
-        for obj in gc.get_objects():
-            if isinstance(obj, WorkerManager.WorkerManager):
-                worker_manager = obj
-            if isinstance(obj, BuildingPlacer.BuildingPlacer):
-                building_placer = obj
-
         for building in self.buildings:
             if building.status == BuildingData.BuildingStatus.unassigned:
                 continue
 
-            worker_to_assign = worker_manager.get_builder(building)
+            worker_to_assign = self.worker_manager.get_builder(building)
 
             if worker_to_assign is not None:
                 building.building_unit = worker_to_assign
@@ -86,43 +89,26 @@ class BuildingManager(object):
 
                 building.final_position = test_location
 
-                building_placer.reserve_tiles(building.final_position, b.type.tileWidth(), b.type.tileHeight())
+                self.building_placer.reserve_tiles(building.final_position, b.type.tileWidth(), b.type.tileHeight())
 
-    @staticmethod
-    def building_location(building):
+    def building_location(self, building):
         """
         Update all aspects of the BuildingManager
         :type building: BuildingData.Building
         """
-        building_placer = None
-        map_tools = None
-        for obj in gc.get_objects():
-            if isinstance(obj, BuildingPlacer.BuildingPlacer):
-                building_placer = obj
-                if isinstance(obj, MapTools.MapTools):
-                    map_tools = obj
-
         if building.type().isRefinery():
-            return building_placer.get_refinery_position()
+            return self.building_placer.get_refinery_position()
 
         if building.type().isResourceDepot():
-            return map_tools.get_next_expansion()
+            return self.map_tools.get_next_expansion()
 
-        return building_placer.get_build_location_near(building, False)
+        return self.building_placer.get_build_location_near(building, False)
 
 
     def construct_assigned_buildings(self):
         """
         For each planned building, if the worker isn't constructing, send the command
         """
-        worker_manager = None
-        building_placer = None
-        for obj in gc.get_objects():
-            if isinstance(obj, WorkerManager.WorkerManager):
-                worker_manager = obj
-            if isinstance(obj, BuildingPlacer.BuildingPlacer):
-                building_placer = obj
-
         for building in self.buildings:
             if building.status != BuildingData.BuildingStatus.assigned:
                 continue
@@ -136,10 +122,10 @@ class BuildingManager(object):
                 elif building.build_command_given:
 
                     # tell worker manager the unit we had is not needed now, since we might not be able to get a location location soon enough
-                    worker_manager.finished_with_worker(building.building_unit)
+                    self.worker_manager.finished_with_worker(building.building_unit)
 
                     # free the previous location in reserved
-                    building_placer.free_tiles(building.final_position, building.type().tileWidth(), building.type().tileHeight())
+                    self.building_placer.free_tiles(building.final_position, building.type().tileWidth(), building.type().tileHeight())
 
                     # reset the building's variables
                     building.building_unit = None
@@ -158,7 +144,29 @@ class BuildingManager(object):
         """
         Check to see if any buildings have started construction and update data structures accordingly
         """
-        pass
+        for building_started in cybw.Broodwar.self().getUnits():
+            # filter out units which aren't buildings under construction
+            if not building_started.getType().isBuilding() or not building_started.isBeingConstructed():
+                continue
+            # check all our building status objects to see if we have a match and if we do, update it
+            for building in self.buildings:
+                if building.status != BuildingData.BuildingStatus.assigned:
+                    continue
+
+                # we have a match
+                if building.final_position == building_started.getTilePosition():
+                    # the resources should now be spent, so we unreserve them
+                    self.reservedMinerals -= building_started.getType().mineralPrice()
+                    self.reservedGas -= building_started.getType().gasPrice()
+
+                    # flag the building as started and set the building unit
+                    building.under_construction = True
+                    building.building_unit = building_started
+
+                    building.status = BuildingData.BuildingStatus.under_construction
+                    self.building_placer.free_tiles(building.final_position, building.type().tileWidth(), building.type().tileHeight())
+
+                    break
 
     def check_for_dead_builder(self):
         """
@@ -170,10 +178,15 @@ class BuildingManager(object):
         """
         Check to see if any buildings have completed and update data structures accordingly
         """
-        pass
+        to_remove = []
+        for building in self.buildings:
+            if building.status != BuildingData.BuildingStatus.under_construction:
+                continue
+            if building.building_unit.isCOmpleted():
+                self.worker_manager.finished_with_worker(building.builder_unit)
+                to_remove.append(building)
 
-    def get_building_worker_code(self):
-        pass
+        self.remove_buildings(to_remove)
 
     def is_being_built(self, type):
         """

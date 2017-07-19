@@ -39,4 +39,4 @@ class WorkerManager:
         pass
 
     def finished_with_worker(self, worker):
-        return True
+        pass
