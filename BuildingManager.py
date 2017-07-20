@@ -172,7 +172,11 @@ class BuildingManager(object):
         """
         If we are Terran (we are) and building is under construction without a worker, assign a new one
         """
-        pass
+        for building in self.buildings:
+            if building.status != BuildingData.BuildingStatus.unassigned:
+                # is the builder dead?
+                if not building.builder_unit.exist():
+                    building.status = BuildingData.BuildingStatus.unassigned
 
     def check_for_completed_buildings(self):
         """
@@ -182,7 +186,7 @@ class BuildingManager(object):
         for building in self.buildings:
             if building.status != BuildingData.BuildingStatus.under_construction:
                 continue
-            if building.building_unit.isCOmpleted():
+            if building.building_unit.isCompleted():
                 self.worker_manager.finished_with_worker(building.builder_unit)
                 to_remove.append(building)
 
