@@ -2,7 +2,7 @@ import cybw
 
 class BuildingPlacer(object):
     def __init__(self):
-        self.reserve_map = []
+        self.reserve_map = {}
 
     def can_build_here(self, position, building):
         """
@@ -13,12 +13,29 @@ class BuildingPlacer(object):
         if not cybw.Broodwar.canBuildHere(position, building.type(), building.builder_unit):
             return False
 
-    def tile_blocks_add_on(self, position):
+        for pos_x in range(position.x, position.x + building.type().tileWidth()):
+            for pos_y in range(position.y, position.y + building.type().tileHeight()):
+                if pos_x in self.reserve_map:
+                    if pos_y in self.reserve_map[pos_x]:
+                        if self.reserve_map[pos_x][pos_y]:
+                            return False
+
+        if self.tile_over_laps_base_locations(position, building.type):
+            return False
+
+        return True
+
+    @staticmethod
+    def tile_blocks_add_on(position):
         """
         check to see if the building at position can have an add on
         :type position: cybw.TilePosition.Position
         """
-        pass
+        for i in range(2):
+            for unit in cybw.Broodwar.getUnitsOnTile(position.x - i, position.y):
+                if unit.canBuildAddon():
+                    return True
+        return False
 
     def can_build_here_with_space(self, position, building, build_dist, horizontal_only):
         """
@@ -28,7 +45,48 @@ class BuildingPlacer(object):
         :type build_dist: int
         :type horizontal_only: bool
         """
-        pass
+        if not self.can_build_here(position, building):
+            return False
+
+        width = building.type().tileWidth()
+        height = building.type().tileHeight()
+
+        if building.type.canBuildAddon():
+            width += 2
+
+        start_x = position.x - build_dist
+        start_y = position.y - build_dist
+        end_x = position.x + width + build_dist
+        end_y = position.y + height + build_dist
+
+        if building.type().isAddon():
+            main_building = building.type().whatBuilds()[0]
+
+
+            start_x = position.x - main_building.tileWidth().x - build_dist
+            start_y = position.y + 2 - main_building.tileHeight() - build_dist
+            end_x = position.x + width + build_dist
+            end_y = position.y + height + build_dist
+
+        if horizontal_only:
+            start_y += build_dist
+            end_y -= build_dist
+
+        # check to make sure that this rectangle fits inside the map
+        if start_x < 0 or start_y < 0 or end_x > cybw.Broodwar.mapWidth() or end_x < position.x + width or end_y > cybw.Broodwar.mapHeight():
+            return False
+
+        for pos_x in range(start_x, end_x):
+            for pos_y in range(start_y, end_y):
+                if not building.type().isRefinery():
+                    if not self.buildable(building, pos_x, pos_y):
+                        return False
+                    if pos_x in self.reserve_map:
+                        if pos_y in self.reserve_map[pos_x]:
+                            if self.reserve_map[pos_x][pos_y]:
+                                return False
+
+        return True
 
     def get_build_location(self, building, padding):
         """
