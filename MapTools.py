@@ -4,3 +4,6 @@ class MapTools(object):
 
     def get_next_expansion(self):
         pass
+
+    def get_closest_tile_to(self, position):
+        pass

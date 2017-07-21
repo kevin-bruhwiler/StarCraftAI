@@ -5,38 +5,17 @@ class WorkerManager:
     def __init__(self):
         self.workers = []
 
-    def add_worker(self, unit):
-        """
-        add a worker to self.workers
-        :type unit: cybw.Unit
-        """
-        if unit.getType().isWorker() and unit not in self.workers:
-            self.workers.append(unit)
+    def update(self):
+        self.update_worker_status()
+        self.handle_gas_workers()
+        self.handle_idle_workers()
+        self.handle_move_workers()
+        self.handle_combat_workers()
 
-    def work(self):
-        """
-        the command that gets called every frame
-        Makes every worker gather resources
-        """
-        for worker in self.workers:
-            if worker.isIdle():
-                if worker.isCarryingGas() or worker.isCarryingMinerals():
-                    worker.returnCargo()
-                else:
-                    minerals = cybw.Broodwar.getMinerals()
-                    closest_mineral = None
-                    for mineral in minerals:
-                        if closest_mineral is None or worker.getDistance(mineral) < worker.getDistance(closest_mineral):
-                            closest_mineral = mineral
-                    if closest_mineral:
-                        worker.gather(closest_mineral)
+        self.draw_resource_debug_info()
+        self.draw_worker_information(450, 20)
 
-    def get_builder(self, building):
-        """
-        Routine for BuildingManager, gets the closest worker to the building
-        :type building: BuildingData.Building
-        """
-        pass
+        self.worker_data.draw_depot_debug_info()
 
     def finished_with_worker(self, worker):
         pass

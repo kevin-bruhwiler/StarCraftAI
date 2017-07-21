@@ -1,9 +1,16 @@
 import cybw
+import MapTools
+
+import gc
 
 class BuildingPlacer(object):
     def __init__(self):
         self.reserve_map = {}
+        self.map_tools = None
 
+        for obj in gc.get_objects():
+            if isinstance(obj, MapTools.MapTools):
+                self.map_tools = obj
     def can_build_here(self, position, building):
         """
         A final check to see if a building can be built in a certain location

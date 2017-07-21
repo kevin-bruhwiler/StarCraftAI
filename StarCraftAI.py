@@ -22,22 +22,40 @@ class StarCraftAI:
         """
         Gets called every frame, calls every sub-controller to run
         """
+        for event in cybw.Broodwar.getEvents():
+            if event.getType() == cybw.EventType.UnitDestroy:
+                if cybw.Broodwar.isReplay():
+                    for player_state in self.replay_game_states:
+                        player_state.remove_unit(event.getUnit())
+                else:
+                    self.game_state.remove_unit(event.getUnit())
+            elif event.getType() == cybw.EventType.UnitMorph:
+                if cybw.Broodwar.isReplay():
+                    for player_state in self.replay_game_states:
+                        player_state.update_unit(event.getUnit())
+                else:
+                    self.game_state.update_unit(event.getUnit())
+            elif event.getType() == cybw.EventType.UnitShow:
+                if cybw.Broodwar.isReplay():
+                    for player_state in self.replay_game_states:
+                        player_state.update_unit(event.getUnit())
+                else:
+                    self.game_state.update_unit(event.getUnit())
+            elif event.getType() == cybw.EventType.UnitHide:
+                    pass
+
         if not cybw.Broodwar.isReplay():
             self.unit_manager.manage()
-            self.building_Manager.assign_workers_to_unassigned_buildings()
 
         if cybw.Broodwar.isReplay():
             for state in self.replay_game_states:
                 state.update()
-                print(state.basic_game_state(state.player))
 
         else:
             self.game_state.update()
             if self.game_state.history_added:
                 self.macro_agent.prepare_input(self.game_state.history)
                 self.macro_agent.run()
-                # build_order_finder = BOGASS.BOGASS(start=self.game_state.basic_game_state(), goal=self.macro_agent.get_output())
-                # build_order_finder.find_optimal_build_order()
 
     def initialize(self):
         """
