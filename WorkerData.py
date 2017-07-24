@@ -276,6 +276,12 @@ class WorkerData(object):
 
         return None
 
+    def get_worker_move_data(self, unit):
+        if unit in self.worker_move.keys():
+            return self.worker_move[unit]
+
+        return None
+
     def get_num_assigned_workers(self, unit):
         if not unit:
             return 0
